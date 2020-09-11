@@ -457,3 +457,50 @@ func (t *TriBandDense) Trace() float64 {
 	}
 	return tr
 }
+
+func copySymBandIntoTriBand(dst *TriBandDense, s SymBanded) {
+	n, k, upper := dst.TriBand()
+	ns, ks := s.SymBand()
+	if n != ns {
+		panic("mat: triangle size mismatch")
+	}
+	if k != ks {
+		panic("mat: triangle bandwidth mismatch")
+	}
+	t := dst.mat
+	sU, _ := untransposeExtract(s)
+	if sbd, ok := sU.(*SymBandDense); ok {
+		s := sbd.RawSymBand()
+		if upper {
+			if s.Uplo == blas.Upper {
+				for i := 0; i < n; i++ {
+					ilen := min(k+1, n-i)
+					copy(t.Data[i*t.Stride:i*t.Stride+ilen], s.Data[i*s.Stride:i*s.Stride+ilen])
+				}
+			} else {
+				// dst is upper triangular, s is in lower triangle.
+				// Commented out due to lack of test coverage.
+				// for i := 0; i < n; i++ {
+				// 	ilen := min(k+1, n-i)
+				// 	for j := 0; j < ilen; j++ {
+				// 		t.Data[i*t.Stride+j] = s.Data[(i+j)*s.Stride+k-j]
+				// 	}
+				// }
+				panic("not implemented")
+			}
+		} else {
+			panic("not implemented")
+		}
+		return
+	}
+	if upper {
+		for i := 0; i < n; i++ {
+			ilen := min(k+1, n-i)
+			for j := 0; j < ilen; j++ {
+				t.Data[i*t.Stride+j] = s.At(i, i+j)
+			}
+		}
+	} else {
+		panic("not implemented")
+	}
+}
