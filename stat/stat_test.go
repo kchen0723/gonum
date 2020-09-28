@@ -1601,6 +1601,59 @@ func TestSkew(t *testing.T) {
 	}
 }
 
+func TestMultipleLinearRegressionByDataRowsWith2Rows(t *testing.T){
+	dataRows := []RegressionDataRow{
+		RegressionDataRow{ Observed: 3, Variables: []float64{1} },
+		RegressionDataRow{ Observed: 2, Variables: []float64{2} },
+	}
+	coeffs, _ := MultipleLinearRegressionByDataRows(dataRows)
+	tolerance := 0.00001
+	if len(coeffs) != 2 || !scalar.EqualWithinAbs(coeffs[0], 4, tolerance) || !scalar.EqualWithinAbs(coeffs[1], -1, tolerance) {
+		t.Error("Regression faild as the coefficients are wrong")
+	}
+}
+
+func TestMultipleLinearRegressionByDataRowsWith3Rows(t *testing.T){
+	dataRows := []RegressionDataRow{
+		RegressionDataRow{ Observed: 3, Variables: []float64{1} },
+		RegressionDataRow{ Observed: 2, Variables: []float64{2} },
+		RegressionDataRow{ Observed: 4, Variables: []float64{3} },
+	}
+	coeffs, _ := MultipleLinearRegressionByDataRows(dataRows)
+	tolerance := 0.00001
+	if len(coeffs) != 2 || !scalar.EqualWithinAbs(coeffs[0], 2, tolerance) || !scalar.EqualWithinAbs(coeffs[1], 0.5, tolerance) {
+		t.Error("Regression faild as the coefficients are wrong")
+	}
+}
+
+func TestMultipleLinearRegressionByDataRowsWithMultipleRows(t *testing.T){
+	dataRows := []RegressionDataRow{
+		RegressionDataRow{ Observed: 1384000, Variables: []float64{9544, 3487, 3, 4, 1280000} },
+		RegressionDataRow{ Observed: 867500, Variables: []float64{9709, 2126, 5, 3, 898000} },
+		RegressionDataRow{ Observed: 720000, Variables: []float64{5470, 3281, 7, 4, 699000} },
+		RegressionDataRow{ Observed: 1020000, Variables: []float64{7254, 3423, 7, 4, 899000} },
+		RegressionDataRow{ Observed: 905000, Variables: []float64{12366, 3406, 6, 2, 880000} },
+		RegressionDataRow{ Observed: 1070000, Variables: []float64{5080, 3497, 4, 2, 999888} },
+		RegressionDataRow{ Observed: 835720, Variables: []float64{11429, 2849, 7, 2, 1134699} },
+	}
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	dataRows = append(dataRows, dataRows...)
+	coeffs, _ := MultipleLinearRegressionByDataRows(dataRows)
+	tolerance := 0.00001
+	if len(coeffs) != 6 || !scalar.EqualWithinAbs(coeffs[0], 219482.23827, tolerance) || !scalar.EqualWithinAbs(coeffs[1], 7.07749, tolerance) {
+		t.Error("Regression faild as the coefficients are wrong")
+	}
+}
+
 func TestSortWeighted(t *testing.T) {
 	for i, test := range []struct {
 		x    []float64

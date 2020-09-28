@@ -7,8 +7,10 @@ package stat
 import (
 	"math"
 	"sort"
+	"errors"
 
 	"gonum.org/v1/gonum/floats"
+	"gonum.org/v1/gonum/mat"
 )
 
 // CumulantKind specifies the behavior for calculating the empirical CDF or Quantile
@@ -732,6 +734,47 @@ func KullbackLeibler(p, q []float64) float64 {
 		}
 	}
 	return kl
+}
+
+type RegressionDataRow struct {
+	Observed float64
+	Variables []float64
+}
+
+func MultipleLinearRegressionByDataRows(dataRows []RegressionDataRow) ([]float64, error){
+	dataRowCount := len(dataRows)
+	if dataRowCount < 2 {
+		return nil, errors.New("No enough data rows")
+	}
+	variableCount := len(dataRows[0].Variables) + 1
+	if dataRowCount < variableCount {
+		return nil, errors.New("No enough data rows")
+	}
+	xDense := mat.NewDense(dataRowCount, variableCount, nil)
+	yDense := mat.NewDense(dataRowCount, 1, nil)
+	for i := 0; i < dataRowCount; i++ {
+		yDense.Set(i, 0, dataRows[i].Observed)
+		for j := 0; j < variableCount; j++ {
+			if j == 0 {
+				xDense.Set(i, 0, 1)
+			} else {
+				xDense.Set(i, j, dataRows[i].Variables[j - 1])
+			}
+		}
+	}
+	return MultipleLinearRegression(xDense, yDense)
+}
+
+func MultipleLinearRegression(x, y *mat.Dense) ([]float64, error){
+	transferedX := x.T()
+	transferedXMulX := new(mat.Dense)
+	transferedXMulX.Mul(transferedX, x)
+	transferedXMulY := new(mat.Dense)
+	transferedXMulY.Mul(transferedX, y)
+	
+	result := new(mat.Dense)
+	err := result.Solve(transferedXMulX, transferedXMulY)
+	return result.RawMatrix().Data, err
 }
 
 // LinearRegression computes the best-fit line
